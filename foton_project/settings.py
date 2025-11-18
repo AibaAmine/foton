@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'transactions',
+    'django_extensions'
 ]
 
 MIDDLEWARE = [
@@ -190,3 +191,18 @@ SIMPLE_JWT = {
     == "true",
     "UPDATE_LAST_LOGIN": False,
 }
+
+
+from decouple import config
+
+# SMS Configuration
+if DEBUG:
+    SMS_BACKEND = 'console'
+    TWILIO_ACCOUNT_SID = ''
+    TWILIO_AUTH_TOKEN = ''
+    TWILIO_PHONE_NUMBER = ''
+else:
+    SMS_BACKEND = 'twilio'
+    TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID')
+    TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN')
+    TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER')

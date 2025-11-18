@@ -4,8 +4,8 @@ from .models import Transaction, MoneyRequester
 
 @admin.register(MoneyRequester)
 class MoneyRequesterAdmin(admin.ModelAdmin):
-    list_display = ['user', 'first_name', 'last_name', 'phone_number', 'created_at']
-    search_fields = ['first_name', 'last_name', 'phone_number', 'user__phone']
+    list_display = ['id', 'first_name', 'last_name', 'phone_number', 'created_at']
+    search_fields = ['first_name', 'last_name', 'phone_number']
     list_filter = ['created_at']
 
 

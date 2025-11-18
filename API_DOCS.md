@@ -3,7 +3,7 @@
 ## Base URL
 
 ```
-http://your-domain.com/api
+https://foton.onrender.com/api
 ```
 
 ---
@@ -79,7 +79,9 @@ http://your-domain.com/api
 **Response:**
 
 ```json
-{}
+{
+    
+}
 ```
 
 _Empty response means token is valid_

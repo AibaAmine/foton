@@ -1,9 +1,10 @@
+import uuid
 from django.db import models
 from accounts.models import Users
 
 
 class MoneyRequester(models.Model):
-    user = models.OneToOneField(Users, on_delete=models.CASCADE, related_name='money_requester', primary_key=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=20)
@@ -14,7 +15,7 @@ class MoneyRequester(models.Model):
 
 
 class Transaction(models.Model):
-    transaction_id = models.AutoField(primary_key=True)
+    transaction_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     fee = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)

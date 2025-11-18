@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 
@@ -31,7 +32,7 @@ class CustomUserManager(BaseUserManager):
 
 
 class Users(AbstractUser):
-    id = models.AutoField(primary_key=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20, unique=True)
     password_hash = models.CharField(max_length=255)
@@ -54,7 +55,7 @@ class Users(AbstractUser):
 
 
 class Wallet(models.Model):
-    wallet_id = models.AutoField(primary_key=True)
+    wallet_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='wallets')
     balance = models.DecimalField(max_digits=15, decimal_places=2)
     last_updated = models.DateTimeField(auto_now=True)
@@ -64,12 +65,20 @@ class Wallet(models.Model):
 
 
 class OTPVerification(models.Model):
-    user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='otp_verifications')
+    
+    PURPOSE_CHOICES = [
+        ('email_verification', 'Email Verification'),
+        ('password_reset', 'Password Reset'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='otp_verifications',null=True, blank=True)
     code = models.CharField(max_length=10)
     created_at = models.DateTimeField(auto_now_add=True)
     expiry_date = models.DateTimeField()
     is_used = models.BooleanField(default=False)
-    purpose = models.CharField(max_length=50)
+    purpose = models.CharField(max_length=50,choices=PURPOSE_CHOICES)
+    is_verified = models.BooleanField(default=False)
 
     def __str__(self):
         return f"OTP for {self.user.email}"
