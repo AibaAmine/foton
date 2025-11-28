@@ -37,6 +37,7 @@ class sendMoneyView(views.APIView):
                 return Response(
                     {
                         "message": "Transaction successful",
+                        "transfer_code": transaction.transfer_code,
                         "transaction_id": transaction.transaction_id,
                         "fee_charged": fee,
                     },
