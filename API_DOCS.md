@@ -13,6 +13,7 @@ https://foton.onrender.com/api
 ### Login
 
 **Endpoint:** `POST /auth/login/`
+**Authentication:** Public
 
 **Request:**
 
@@ -45,6 +46,7 @@ https://foton.onrender.com/api
 ### Refresh Token
 
 **Endpoint:** `POST /token/refresh/`
+**Authentication:** Public
 
 **Request:**
 
@@ -67,6 +69,7 @@ https://foton.onrender.com/api
 ### Verify Token
 
 **Endpoint:** `POST /token/verify/`
+**Authentication:** Public
 
 **Request:**
 
@@ -107,6 +110,7 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
 ### Request OTP
 
 **Endpoint:** `POST /auth/password-reset/request/`
+**Authentication:** Public
 
 **Request:**
 
@@ -130,6 +134,7 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
 ### Verify OTP
 
 **Endpoint:** `POST /auth/password-reset/verify/`
+**Authentication:** Public
 
 **Request:**
 
@@ -155,6 +160,7 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
 ### Reset Password
 
 **Endpoint:** `POST /auth/password-reset/confirm/`
+**Authentication:** Public
 
 **Request:**
 
@@ -181,6 +187,7 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
 ### Send Money
 
 **Endpoint:** `POST /transactions/send/`
+**Authentication:** Required (Bearer Token)
 
 **Request:**
 
@@ -219,6 +226,78 @@ _Note: `national_id_number` is optional._
 ```json
 {
   "error": "Insufficient funds in agent wallet."
+}
+```
+
+---
+
+### Receive Money (Step 1: Lookup)
+
+**Endpoint:** `POST /transactions/receive/lookup/`
+**Authentication:** Required (Bearer Token)
+
+**Request (Option A: By Code):**
+
+```json
+{
+  "transfer_code": "1234567890"
+}
+```
+
+**Request (Option B: By Name & Phone):**
+
+```json
+{
+  "phone_number": "0555555555",
+  "last_name": "Aiba"
+}
+```
+
+**Response:**
+
+```json
+{
+  "transaction_id": "a1b2c3d4-e5f6-...",
+  "amount": 15000.0,
+  "sender": {
+    "name": "Mohamed Benali",
+    "phone": "0777777777"
+  },
+  "recipient": {
+    "name": "Amine Aiba",
+    "phone": "0555555555"
+  },
+  "created_at": "2025-11-28T10:30:00Z",
+  "status": "pending"
+}
+```
+
+---
+
+### Receive Money (Step 2: Claim)
+
+**Endpoint:** `POST /transactions/receive/claim/`
+**Authentication:** Required (Bearer Token)
+
+**Request:**
+
+```json
+{
+  "transaction_id": "a1b2c3d4-e5f6-...",
+  "national_id_number": "987654321"
+}
+```
+
+_Note: `national_id_number` is optional (from ID scan)._
+
+**Response:**
+
+```json
+{
+  "message": "Transaction claimed successfully.",
+  "transaction_id": "a1b2c3d4-e5f6-...",
+  "amount": 15000.0,
+  "claimed_at": "2025-11-28T10:35:00Z"
 }
 ```
 

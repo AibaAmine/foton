@@ -23,3 +23,30 @@ class SendMoneySerializer(serializers.Serializer):
             raise serializers.ValidationError("Amount must be positive.")
         return value
 
+
+class ReceiveMoneyLookupSerializer(serializers.Serializer):
+
+    transfer_code = serializers.CharField(required=False, allow_blank=True)
+    phone_number = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, data):
+
+        code = data.get("transfer_code")
+        phone = data.get("phone_number")
+        name = data.get("last_name")
+
+        if code:
+            return data
+
+        if phone and name:
+            return data
+
+        raise serializers.ValidationError(
+            "You must provide either a Transfer Code OR both Phone Number and Last Name "
+        )
+
+
+class RecieveMoneyClaimSerializer(serializers.Serializer):
+    transaction_id = serializers.UUIDField()
+    national_id_number = serializers.CharField(required=False, allow_blank=True)
