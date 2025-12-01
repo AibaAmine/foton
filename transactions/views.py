@@ -13,6 +13,9 @@ from .serializers import (
 )
 from services.transactions_services import TransactionService
 from services.notification_service import NotificationService
+from .models import IdempotencyLog
+
+from django.db import IntegrityError, transaction
 
 
 class sendMoneyView(views.APIView):
@@ -20,45 +23,94 @@ class sendMoneyView(views.APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+
+        idempotency_key = request.headers.get("Idempotency-Key")
+
+        if not idempotency_key:
+            return Response(
+                {"error": "Idempotency-Key header is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            with transaction.atomic():
+                # If this fails (IntegrityError), it means the key exists (duplicate request).
+                log_entry, created = IdempotencyLog.objects.get_or_create(
+                    key=idempotency_key,
+                    defaults={"user": request.user, "status": "PROCESSING"},
+                )
+        except IntegrityError:
+            log_entry = IdempotencyLog.objects.get(key=idempotency_key)
+            created = False
+
+        if not created:
+            if log_entry.status == "PROCESSING":
+                return Response(
+                    {"error": "Transaction is currently being processed. Please wait."},
+                    status=status.HTTP_409_CONFLICT,
+                )
+            return Response(log_entry.response_body, status=log_entry.response_status)
+
         serializer = SendMoneySerializer(data=request.data)
 
-        if serializer.is_valid(raise_exception=True):
+        if not serializer.is_valid():
+            log_entry.status = "FAILED"
+            log_entry.response_body = serializer.errors
+            log_entry.response_status = status.HTTP_400_BAD_REQUEST
+            log_entry.save()
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
             data = serializer.validated_data
 
             amount = data["amount"]
             fee = amount * Decimal("0.01")
 
+            new_txn = TransactionService.create_send_transaction(
+                agent=request.user,
+                sender_data=data["sender"],
+                recipient_data=data["recipient"],
+                amount=amount,
+                fee=fee,
+            )
+
+            response_data = {
+                "message": "Transaction successful",
+                "transfer_code": new_txn.transfer_code,
+                "transaction_id": str(new_txn.transaction_id),
+                "fee_charged": float(fee),
+            }
+            response_status = status.HTTP_201_CREATED
+
+            log_entry.response_body = response_data
+            log_entry.response_status = status.HTTP_201_CREATED
+            log_entry.status = "COMPLETED"
+            log_entry.save()
+
             try:
-                transaction = TransactionService.create_send_transaction(
-                    agent=request.user,
-                    sender_data=data["sender"],
-                    recipient_data=data["recipient"],
-                    amount=amount,
-                    fee=fee,
-                )
-
-                NotificationService.send_transfer_sms(transaction)
-
-                return Response(
-                    {
-                        "message": "Transaction successful",
-                        "transfer_code": transaction.transfer_code,
-                        "transaction_id": transaction.transaction_id,
-                        "fee_charged": fee,
-                    },
-                    status=status.HTTP_201_CREATED,
-                )
-
-            except ValidationError as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                NotificationService.send_transfer_sms(new_txn)
             except Exception as e:
-                print(f"Error in SendMoneyView: {e}")
-                return Response(
-                    {"error": "An internal error occurred."},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
+                print(f"SMS Failed (Non-blocking): {e}")
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(response_data, status=response_status)
+
+        except ValidationError as e:
+            error_resp = {"error": str(e)}
+            log_entry.response_body = error_resp
+            log_entry.response_status = status.HTTP_400_BAD_REQUEST
+            log_entry.status = "FAILED"
+            log_entry.save()
+            return Response(error_resp, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            print(f"Critical Error: {e}")
+            # Internal Error
+            error_resp = {"error": "An internal error occurred."}
+            log_entry.response_body = error_resp
+            log_entry.response_status = status.HTTP_500_INTERNAL_SERVER_ERROR
+            log_entry.status = "FAILED"
+            log_entry.save()
+            return Response(error_resp, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ReceiveLookupView(views.APIView):

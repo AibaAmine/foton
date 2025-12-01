@@ -28,7 +28,6 @@ class Transaction(models.Model):
         DEPOSIT = "deposit", "Deposit"
         WITHDRAWAL = "withdrawal", "Withdrawal"
 
-
     transaction_id = models.UUIDField(
         primary_key=True, default=uuid.uuid4, editable=False
     )
@@ -61,3 +60,23 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"Transaction {self.transaction_id} - {self.type}"
+
+
+class IdempotencyLog(models.Model):
+    key = models.CharField(max_length=255, unique=True)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    response_body = models.JSONField(null=True, blank=True)
+    response_status = models.IntegerField(null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ("PROCESSING", "Processing"),
+            ("COMPLETED", "Completed"),
+            ("FAILED", "Failed"),
+        ],
+        default="PROCESSING",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Key: {self.key} - User: {self.user.phone}"

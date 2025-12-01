@@ -188,6 +188,9 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
 
 **Endpoint:** `POST /transactions/send/`
 **Authentication:** Required (Bearer Token)
+**Headers:**
+
+- `Idempotency-Key`: A unique UUID for this request (Required to prevent double-spending).
 
 **Request:**
 
