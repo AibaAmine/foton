@@ -50,3 +50,46 @@ class ReceiveMoneyLookupSerializer(serializers.Serializer):
 class RecieveMoneyClaimSerializer(serializers.Serializer):
     transaction_id = serializers.UUIDField()
     national_id_number = serializers.CharField(required=False, allow_blank=True)
+
+
+class TransactionHistorySerializer(serializers.ModelSerializer):
+    direction = serializers.SerializerMethodField()
+    other_party_name = serializers.SerializerMethodField()
+    other_party_phone = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Transaction
+        fields = [
+            "transaction_id",
+            "amount",
+            "created_at",
+            "status",
+            "direction",
+            "other_party_name",
+            "other_party_phone",
+            "transfer_code",
+        ]
+
+    def get_direction(self, obj):
+        user = self.context["request"].user
+        if obj.initiating_agent == user:
+            return "sent"
+        return "received"
+
+    def get_other_party_name(self, obj):
+        user = self.context["request"].user
+        if obj.initiating_agent == user:
+            return f"{obj.recipient_person.first_name} {obj.recipient_person.last_name}"
+        return f"{obj.sender_person.first_name} {obj.sender_person.last_name}"
+
+    def get_other_party_phone(self, obj):
+        user = self.context["request"].user
+        if obj.initiating_agent == user:
+            return obj.recipient_person.phone_number
+        return obj.sender_person.phone_number
+
+
+
+class UserLookupSerializer(serializers.Serializer):
+    phone_number = serializers.CharField(max_length=20)
+    

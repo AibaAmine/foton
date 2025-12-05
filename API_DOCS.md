@@ -182,6 +182,24 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
 
 ---
 
+## Accounts
+
+### Get Wallet Balance
+
+**Endpoint:** `GET /accounts/wallet/`
+**Authentication:** Required (Bearer Token)
+
+**Response:**
+
+```json
+{
+  "balance": "5000.00",
+  "last_updated": "2025-12-03T14:10:00Z"
+}
+```
+
+---
+
 ## Transactions
 
 ### Send Money
@@ -301,6 +319,56 @@ _Note: `national_id_number` is optional (from ID scan)._
   "transaction_id": "a1b2c3d4-e5f6-...",
   "amount": 15000.0,
   "claimed_at": "2025-11-28T10:35:00Z"
+}
+```
+
+---
+
+### Transaction History
+
+**Endpoint:** `GET /transactions/history/`
+**Authentication:** Required (Bearer Token)
+
+**Query Parameters:**
+
+- `page`: Page number (default: 1)
+
+**Response:**
+
+```json
+{
+  "count": 50,
+  "next": "https://foton.onrender.com/api/transactions/history/?page=2",
+  "previous": null,
+  "results": [
+    {
+      "transaction_id": "a1b2c3d4-e5f6-...",
+      "amount": 15000.0,
+      "status": "COMPLETED",
+      "transaction_type": "SEND",
+      "created_at": "2025-11-28T10:30:00Z",
+      "initiating_agent": {
+        "phone": "0783154278",
+        "full_name": "Amine"
+      },
+      "receiving_agent": {
+        "phone": "0781234567",
+        "full_name": "John Doe"
+      }
+    },
+    {
+      "transaction_id": "b2c3d4e5-f6a7-...",
+      "amount": 5000.0,
+      "status": "PENDING",
+      "transaction_type": "SEND",
+      "created_at": "2025-11-27T14:20:00Z",
+      "initiating_agent": {
+        "phone": "0783154278",
+        "full_name": "Amine"
+      },
+      "receiving_agent": null
+    }
+  ]
 }
 ```
 

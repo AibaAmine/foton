@@ -5,8 +5,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from services.account_service import create_password_reset_otp ,verify_password_reset_otp,reset_user_password
 from .serializers import (
-    UserLoginSerializer,PasswordRestRequestSerializer,PasswordRestConfimSerializer,PasswordRestVerifySerializer
-    
+    UserLoginSerializer,PasswordRestRequestSerializer,PasswordRestConfimSerializer,PasswordRestVerifySerializer,
+    WalletSerializer
 )
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework.permissions import IsAuthenticated
@@ -124,6 +124,14 @@ class PasswordResetConfirmView(generics.GenericAPIView):
                 'success': False,
                 'message': message
             }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class WalletView(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = WalletSerializer
+
+    def get_object(self):
+        return self.request.user.wallet
         
            
         

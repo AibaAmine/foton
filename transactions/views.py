@@ -10,12 +10,17 @@ from .serializers import (
     SendMoneySerializer,
     ReceiveMoneyLookupSerializer,
     RecieveMoneyClaimSerializer,
+    TransactionHistorySerializer,
+    UserLookupSerializer,
 )
 from services.transactions_services import TransactionService
 from services.notification_service import NotificationService
-from .models import IdempotencyLog
+from .models import IdempotencyLog, Transaction, MoneyRequester
+from django.db.models import Q
+from rest_framework.pagination import PageNumberPagination
 
 from django.db import IntegrityError, transaction
+from accounts.views import User
 
 
 class sendMoneyView(views.APIView):
@@ -190,5 +195,69 @@ class ReceiveClaimView(views.APIView):
                     {"error": "Internal error"},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TransactionHistoryView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        # Filter transactions where user is sender or receiver
+        transactions = Transaction.objects.filter(
+            Q(initiating_agent=user) | Q(receiving_agent=user)
+        ).order_by("-created_at")
+
+        # Pagination
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+        result_page = paginator.paginate_queryset(transactions, request)
+
+        serializer = TransactionHistorySerializer(
+            result_page, many=True, context={"request": request}
+        )
+        return paginator.get_paginated_response(serializer.data)
+
+
+class UserlookupView(views.APIView):
+
+    def post(self, request):
+
+        serializer = UserLookupSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            phone = serializer.validated_data["phone_number"]
+
+            agent = User.objects.filter(phone=phone).first()
+
+            if agent:
+                return Response(
+                    {
+                        "error": "Cannot send consumer transfer to a registered Foton Agent's number.",
+                        "type": "agent_conflict",
+                    },
+                    status=status.HTTP_409_CONFLICT,
+                )
+
+            customer = MoneyRequester.objects.filter(phone_number=phone).first()
+            if customer:
+                return Response(
+                    {
+                        "full_name": f"{customer.first_name} {customer.last_name}",
+                        "type": "Customer",
+                        "exists_in_history": True,
+                        "message": "Customer identified from history.",
+                    },
+                    status=status.HTTP_200_OK,
+                )
+
+            return Response(
+                {
+                    "message": "New customer. Please fill in details.",
+                    "exists_in_history": False,
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
