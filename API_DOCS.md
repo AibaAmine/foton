@@ -374,6 +374,36 @@ _Note: `national_id_number` is optional (from ID scan)._
 
 ---
 
+### Transaction Expiry & Refunds
+
+**Concept:**
+To prevent money from being "stuck" in the system, transactions have an expiration time.
+
+- **Production Duration:** 1 Week
+
+**Lifecycle:**
+
+1.  **Pending:** Transaction created. Receiver has time to claim it.
+2.  **Expired:** If not claimed by the deadline, the system marks it as `EXPIRED`.
+3.  **Refund Notification:** The **Sender** automatically receives an SMS notifying them that the transfer was not claimed and they can visit an agent for a refund.
+
+**Trigger Expiry Check (For Testing):**
+Since the background job runs periodically, you can force a check immediately using this endpoint.
+
+**Endpoint:** `POST /transactions/expire-trigger/`
+**Authentication:** Required (Bearer Token)
+
+**Response:**
+
+```json
+{
+  "message": "Cleanup executed",
+  "expired_count": 3
+}
+```
+
+---
+
 ## Token Lifetimes
 
 - **Access Token:** 150 minutes

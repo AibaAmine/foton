@@ -5,6 +5,7 @@ from .views import (
     ReceiveClaimView,
     TransactionHistoryView,
     UserlookupView,
+    ExpireTransactionsView
 )
 
 urlpatterns = [
@@ -13,4 +14,5 @@ urlpatterns = [
     path("receive/claim/", ReceiveClaimView.as_view(), name="receive-claim"),
     path("history/", TransactionHistoryView.as_view(), name="transaction-history"),
     path("lookup-user/", UserlookupView.as_view(), name="lookup-user"),
+    path("expire-trigger/", ExpireTransactionsView.as_view(), name="expire-trigger"),
 ]

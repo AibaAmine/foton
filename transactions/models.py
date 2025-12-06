@@ -1,3 +1,5 @@
+from datetime import timedelta
+from django.utils import timezone
 import uuid
 from django.db import models
 from accounts.models import Users
@@ -22,6 +24,7 @@ class Transaction(models.Model):
         PENDING = "pending", "Pending"
         COMPLETED = "completed", "Completed"
         CANCELLED = "cancelled", "Cancelled"
+        EXPIRED = "expired", "Expired"
 
     class Type(models.TextChoices):
         TRANSFER = "transfer", "Transfer"
@@ -58,6 +61,13 @@ class Transaction(models.Model):
         MoneyRequester, on_delete=models.CASCADE, related_name="received_transactions"
     )
 
+    expires_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            self.expires_at = timezone.now() + timedelta(minutes=2)
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Transaction {self.transaction_id} - {self.type}"
 
@@ -80,6 +90,3 @@ class IdempotencyLog(models.Model):
 
     def __str__(self):
         return f"Key: {self.key} - User: {self.user.phone}"
-
-
-

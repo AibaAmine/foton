@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ValidationError
 from decimal import Decimal
+from django.utils import timezone
 
 from .serializers import (
     PersonSerializer,
@@ -261,3 +262,34 @@ class UserlookupView(views.APIView):
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ExpireTransactionsView(views.APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+
+        now = timezone.now()
+
+        expired_qs = Transaction.objects.filter(
+            status=Transaction.Status.PENDING, expires_at__lte=now
+        )
+
+        count = 0
+        if expired_qs.exists():
+            for txn in expired_qs:
+                txn.status = Transaction.Status.EXPIRED
+                txn.save()
+
+                try:
+                    NotificationService.send_refund_sms(txn)
+                except Exception as e:
+                    print(f"SMS Failed: {e}")
+
+                count += 1
+
+        return Response(
+            {"message": "Cleanup executed", "expired_count": count},
+            status=status.HTTP_200_OK,
+        )

@@ -30,7 +30,7 @@ class TransactionService:
             if agent_wallet.balance < total_required:
                 raise ValidationError("Insufficient funds in agent wallet.")
 
-            # 2. Handle Sender    
+            # 2. Handle Sender
             sender, _ = MoneyRequester.objects.update_or_create(
                 phone_number=sender_data["phone_number"],
                 defaults={
@@ -77,7 +77,9 @@ class TransactionService:
     @staticmethod
     def lookup_transaction(transfer_code=None, phone_number=None, last_name=None):
 
-        qs = Transaction.objects.filter(status=Transaction.Status.PENDING)
+        qs = Transaction.objects.filter(
+            status__in=[Transaction.Status.PENDING, Transaction.Status.EXPIRED]
+        )
 
         if transfer_code:
             return qs.filter(
@@ -102,15 +104,21 @@ class TransactionService:
             except Transaction.DoesNotExist:
                 raise ValidationError("Transaction not found.")
 
-            if txn.status != Transaction.Status.PENDING:
-                raise ValidationError(
-                    "Transaction has already been claimed or cancelled."
-                )
+            # expiring logic starts
+            is_refund = False
+
+            if txn.status == Transaction.Status.EXPIRED:
+                # if we are here that mean that its expired trasaction and its refund situation 
+                is_refund = True
+
+            elif txn.status != Transaction.Status.PENDING:
+                raise ValidationError("Transaction has already been processed.")
 
             if national_id_number:
-                recipient = txn.recipient_person
-                recipient.national_id_number = national_id_number
-                recipient.save()
+
+                person = txn.sender_person if is_refund else txn.recipient_person
+                person.national_id_number = national_id_number
+                person.save()
 
             # The agent gave CASH to the customer, so we give DIGITAL money to the agent.
             agent_wallet = getattr(agent, "wallet", None)
@@ -125,6 +133,7 @@ class TransactionService:
             txn.status = Transaction.Status.COMPLETED
             txn.receiving_agent = agent
             txn.claimed_at = timezone.now()
+            txn.memo = "Refunded to Sender" if is_refund else "Claimed by Recipient"
             txn.save()
 
             return txn
