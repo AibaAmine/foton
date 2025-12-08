@@ -200,7 +200,92 @@ Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGc...
 
 ---
 
+### Get Profile
+
+**Endpoint:** `GET /accounts/profile/`
+**Authentication:** Required (Bearer Token)
+
+**Response:**
+
+```json
+{
+  "full_name": "Amine Aiba",
+  "email": "amine@example.com",
+  "phone": "0783154278",
+  "avatar": "https://foton.onrender.com/media/avatars/avatar.jpg",
+  "address": "Kigali, Rwanda",
+  "city": "Kigali",
+  "agency_name": "Foton Agency 1"
+}
+```
+
+---
+
+### Update Profile
+
+**Endpoint:** `PUT /accounts/profile/`
+**Authentication:** Required (Bearer Token)
+**Content-Type:** `multipart/form-data` (Required for image upload)
+
+**Request:**
+
+- `avatar`: (File, Optional) Max 2MB, JPG/PNG only.
+- `address`: (Text, Optional)
+- `city`: (Text, Optional)
+- `agency_name`: (Text, Optional) Min 2 chars.
+
+**Response:**
+
+Returns the updated profile object (same as GET).
+
+---
+
+### Change Password
+
+**Endpoint:** `POST /accounts/change-password/`
+**Authentication:** Required (Bearer Token)
+
+**Request:**
+
+```json
+{
+  "old_password": "current_password",
+  "new_password": "new_secure_password"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Password updated successfully"
+}
+```
+
+---
+
 ## Transactions
+
+### Calculate Fee (Pre-Send)
+
+**Endpoint:** `GET /transactions/calculate-fee/`
+**Authentication:** Required (Bearer Token)
+
+**Query Parameters:**
+
+- `amount`: The amount to send (e.g., `15000`)
+
+**Response:**
+
+```json
+{
+  "amount": 15000.0,
+  "fee": 300.0,
+  "total": 15300.0
+}
+```
+
+---
 
 ### Send Money
 
@@ -369,6 +454,52 @@ _Note: `national_id_number` is optional (from ID scan)._
       "receiving_agent": null
     }
   ]
+}
+```
+
+---
+
+### Lookup User (Pre-Send Check)
+
+**Endpoint:** `POST /transactions/lookup-user/`
+**Authentication:** Required (Bearer Token)
+
+**Purpose:** Checks if a phone number belongs to a past customer (to auto-fill details) or a registered Agent (to block the transfer).
+
+**Request:**
+
+```json
+{
+  "phone_number": "0783154278"
+}
+```
+
+**Response (Existing Customer):**
+
+```json
+{
+  "full_name": "John Doe",
+  "type": "Customer",
+  "exists_in_history": true,
+  "message": "Customer identified from history."
+}
+```
+
+**Response (New Customer):**
+
+```json
+{
+  "message": "New customer. Please fill in details.",
+  "exists_in_history": false
+}
+```
+
+**Response (Agent Conflict):**
+
+```json
+{
+  "error": "Cannot send consumer transfer to a registered Foton Agent's number.",
+  "type": "agent_conflict"
 }
 ```
 

@@ -5,6 +5,8 @@ from .views import (
     PsswordRestVerifyView,
     PasswordResetConfirmView,
     WalletView,
+    ProfileView,
+    ChangePasswordView,
 )
 
 urlpatterns = [
@@ -25,4 +27,6 @@ urlpatterns = [
         name="password-reset-confirm",
     ),
     path("wallet/", WalletView.as_view(), name="wallet-detail"),
+    path("profile/", ProfileView.as_view(), name="profile-detail"),
+    path("change-password/", ChangePasswordView.as_view(), name="change-password"),
 ]

@@ -70,7 +70,7 @@ class sendMoneyView(views.APIView):
             data = serializer.validated_data
 
             amount = data["amount"]
-            fee = amount * Decimal("0.01")
+            fee = TransactionService.calculate_fee(amount)
 
             new_txn = TransactionService.create_send_transaction(
                 agent=request.user,
@@ -293,3 +293,33 @@ class ExpireTransactionsView(views.APIView):
             {"message": "Cleanup executed", "expired_count": count},
             status=status.HTTP_200_OK,
         )
+
+
+class CalculateFeeView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        amount = request.query_params.get("amount")
+        if not amount:
+            return Response(
+                {"error": "Amount parameter is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            amount_decimal = Decimal(amount)
+            fee = TransactionService.calculate_fee(amount_decimal)
+            total = amount_decimal + fee
+
+            return Response(
+                {
+                    "amount": float(amount_decimal),
+                    "fee": float(fee),
+                    "total": float(total),
+                }
+            )
+        except Exception as e:
+            return Response(
+                {"error": "Invalid amount format."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )

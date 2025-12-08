@@ -7,7 +7,40 @@ from django.utils import timezone
 from accounts.models import Wallet
 
 
+from decimal import Decimal
+
+
 class TransactionService:
+
+    @staticmethod
+    def calculate_fee(amount):
+        """
+        Calculates the fee based on the amount range.
+        """
+        amount = Decimal(str(amount))
+
+        if 1000 <= amount <= 5000:
+            return Decimal("100.00")
+        elif 5000 < amount <= 10000:
+            return Decimal("200.00")
+        elif 10000 < amount <= 15000:
+            return Decimal("300.00")
+        elif 15000 < amount <= 20000:
+            return Decimal("400.00")
+        elif 20000 < amount <= 30000:
+            return Decimal("500.00")
+        elif 30000 < amount <= 50000:
+            return Decimal("600.00")
+        elif 50000 < amount <= 70000:
+            return Decimal("700.00")
+        elif 70000 < amount <= 100000:
+            return Decimal("800.00")
+        else:
+
+            if amount < 1000:
+                return Decimal("0.00")
+
+            return amount * Decimal("0.01")
 
     @staticmethod
     def generate_transfer_code():
@@ -108,7 +141,7 @@ class TransactionService:
             is_refund = False
 
             if txn.status == Transaction.Status.EXPIRED:
-                # if we are here that mean that its expired trasaction and its refund situation 
+                # if we are here that mean that its expired trasaction and its refund situation
                 is_refund = True
 
             elif txn.status != Transaction.Status.PENDING:

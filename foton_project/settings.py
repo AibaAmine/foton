@@ -34,6 +34,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # Cloudinary
+    "cloudinary_storage",
+    "cloudinary",
     "accounts.apps.AccountsConfig",
     "transactions",
     "django_extensions",
@@ -128,10 +131,13 @@ STATIC_URL = "static/"
 
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
+
+# Media files (Uploads)
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -200,3 +206,20 @@ else:
     TWILIO_ACCOUNT_SID = config("TWILIO_ACCOUNT_SID")
     TWILIO_AUTH_TOKEN = config("TWILIO_AUTH_TOKEN")
     TWILIO_PHONE_NUMBER = config("TWILIO_PHONE_NUMBER")
+
+
+# Cloudinary Storage
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": config("CLOUDINARY_CLOUD_NAME", default=""),
+    "API_KEY": config("CLOUDINARY_API_KEY", default=""),
+    "API_SECRET": config("CLOUDINARY_API_SECRET", default=""),
+}
+
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}

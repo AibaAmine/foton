@@ -68,6 +68,17 @@ class Wallet(models.Model):
         return f"Wallet - {self.user.email}"
 
 
+class Profile(models.Model):
+    user = models.OneToOneField(Users, on_delete=models.CASCADE, related_name="profile")
+    avatar = models.ImageField(upload_to="avatars/", null=True, blank=True)
+    address = models.CharField(max_length=255, null=True, blank=True)
+    city = models.CharField(max_length=100, null=True, blank=True)
+    agency_name = models.CharField(max_length=100, null=True, blank=True)
+
+    def __str__(self):
+        return f"Profile of {self.user.full_name}"
+
+
 class OTPVerification(models.Model):
 
     PURPOSE_CHOICES = [

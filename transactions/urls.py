@@ -5,7 +5,8 @@ from .views import (
     ReceiveClaimView,
     TransactionHistoryView,
     UserlookupView,
-    ExpireTransactionsView
+    ExpireTransactionsView,
+    CalculateFeeView,
 )
 
 urlpatterns = [
@@ -15,4 +16,5 @@ urlpatterns = [
     path("history/", TransactionHistoryView.as_view(), name="transaction-history"),
     path("lookup-user/", UserlookupView.as_view(), name="lookup-user"),
     path("expire-trigger/", ExpireTransactionsView.as_view(), name="expire-trigger"),
+    path("calculate-fee/", CalculateFeeView.as_view(), name="calculate-fee"),
 ]
