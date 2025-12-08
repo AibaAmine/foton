@@ -89,6 +89,29 @@ _Empty response means token is valid_
 
 ---
 
+### Logout
+
+**Endpoint:** `POST /auth/logout`
+**Authentication:** Required (Bearer Token)
+
+**Request:**
+
+```json
+{
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+---
+
 ## Using Authenticated Endpoints
 
 Add this header to all protected endpoints:

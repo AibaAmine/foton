@@ -44,11 +44,11 @@ class Transaction(models.Model):
     claimed_at = models.DateTimeField(null=True, blank=True)
 
     initiating_agent = models.ForeignKey(
-        Users, on_delete=models.CASCADE, related_name="initiated_transactions"
+        Users, on_delete=models.PROTECT, related_name="initiated_transactions"
     )
     receiving_agent = models.ForeignKey(
         Users,
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         related_name="received_agent_transactions",
         null=True,
         blank=True,

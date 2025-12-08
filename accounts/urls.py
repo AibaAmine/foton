@@ -7,6 +7,7 @@ from .views import (
     WalletView,
     ProfileView,
     ChangePasswordView,
+    LogoutView,
 )
 
 urlpatterns = [
@@ -16,6 +17,7 @@ urlpatterns = [
         PasswordResetRequestView.as_view(),
         name="password-reset-request",
     ),
+    path("logout", LogoutView.as_view(), name="user-logout"),
     path(
         "password-reset/verify/",
         PsswordRestVerifyView.as_view(),

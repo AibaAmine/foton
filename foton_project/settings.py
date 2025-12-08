@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     # Cloudinary
     "cloudinary_storage",
     "cloudinary",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "accounts.apps.AccountsConfig",
     "transactions",
     "django_extensions",
