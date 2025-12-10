@@ -7,12 +7,14 @@ from .views import (
     UserlookupView,
     ExpireTransactionsView,
     CalculateFeeView,
+    TransactionDetailView
 )
 
 urlpatterns = [
     path("send/", sendMoneyView.as_view(), name="send-money"),
     path("receive/lookup/", ReceiveLookupView.as_view(), name="receive-lookup"),
     path("receive/claim/", ReceiveClaimView.as_view(), name="receive-claim"),
+    path("detail/<uuid:transaction_id>/", TransactionDetailView.as_view(), name="transaction-detail"),
     path("history/", TransactionHistoryView.as_view(), name="transaction-history"),
     path("lookup-user/", UserlookupView.as_view(), name="lookup-user"),
     path("expire-trigger/", ExpireTransactionsView.as_view(), name="expire-trigger"),

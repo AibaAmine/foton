@@ -13,6 +13,7 @@ from .serializers import (
     RecieveMoneyClaimSerializer,
     TransactionHistorySerializer,
     UserLookupSerializer,
+    TransactionDetailSerializer,
 )
 from services.transactions_services import TransactionService
 from services.notification_service import NotificationService
@@ -198,6 +199,33 @@ class ReceiveClaimView(views.APIView):
                 )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TransactionDetailView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, transaction_id):
+        try:
+            transaction = Transaction.objects.get(transaction_id=transaction_id)
+
+            # Ensure the requesting user is either the initiating or receiving agent
+            if (
+                transaction.initiating_agent != request.user
+                and transaction.receiving_agent != request.user
+            ):
+                return Response(
+                    {"error": "You do not have permission to view this transaction."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+            serializer = TransactionDetailSerializer(transaction)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Transaction.DoesNotExist:
+            return Response(
+                {"error": "Transaction not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 class TransactionHistoryView(views.APIView):

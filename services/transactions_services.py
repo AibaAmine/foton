@@ -60,8 +60,9 @@ class TransactionService:
             except Wallet.DoesNotExist:
                 raise ValidationError("Agent does not have a wallet.")
 
-            if agent_wallet.balance < total_required:
-                raise ValidationError("Insufficient funds in agent wallet.")
+            # Insufficient funds check removed to allow negative balance (overdraft)
+            # if agent_wallet.balance < total_required:
+            #     raise ValidationError("Insufficient funds in agent wallet.")
 
             # 2. Handle Sender
             sender, _ = MoneyRequester.objects.update_or_create(

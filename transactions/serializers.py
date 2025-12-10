@@ -52,6 +52,28 @@ class RecieveMoneyClaimSerializer(serializers.Serializer):
     national_id_number = serializers.CharField(required=False, allow_blank=True)
 
 
+class TransactionDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = "__all__"
+        read_only_fields = [
+            "transaction_id",
+            "amount",
+            "fee",
+            "created_at",
+            "status",
+            "type",
+            "memo",
+            "transfer_code",
+            "claimed_at",
+            "initiating_agent",
+            "receiving_agent",
+            "sender_person",
+            "recipient_person",
+            "expires_at",
+        ]
+
+
 class TransactionHistorySerializer(serializers.ModelSerializer):
     direction = serializers.SerializerMethodField()
     other_party_name = serializers.SerializerMethodField()
@@ -89,7 +111,5 @@ class TransactionHistorySerializer(serializers.ModelSerializer):
         return obj.sender_person.phone_number
 
 
-
 class UserLookupSerializer(serializers.Serializer):
     phone_number = serializers.CharField(max_length=20)
-    
